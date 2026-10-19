@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <title>U.S. Flight Network Explorer | Lab 07B</title>
+
+
+    <!-- Leaflet: interactive map library -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+
+    <!-- Our website's stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body>
+
+
+    <header class="site-header">
+        <div class="header-content">
+            <p class="eyebrow">ISC4221C · LAB 07B</p>
+            <h1>U.S. Flight Network Explorer</h1>
+            <p class="subtitle">
+                Can I Get There From Here?
+                Explore airports, connections, and flight paths
+                across the United States.
+            </p>
+        </div>
+    </header>
+
+
+    <nav class="navigation">
+        <a href="#map-section">Airport Map</a>
+        <a href="#lookup-section">Airport Lookup</a>
+        <a href="#stats-section">Network Statistics</a>
+        <a href="#connections-section">Connection Finder</a>
+        <a href="#about-section">About</a>
+    </nav>
+
+
+    <main>
+
+
+        <!-- PANEL A: INTERACTIVE AIRPORT MAP -->
+        <section id="map-section" class="panel">
+            <div class="section-heading">
+                <span class="panel-letter">A</span>
+                <div>
+                    <h2>Interactive Airport Map</h2>
+                    <p>
+                        Click an airport to explore its direct
+                        connections. Tallahassee routes are highlighted.
+                    </p>
+                </div>
+            </div>
+
+
+            <div class="map-controls">
+                <label>
+                    <input type="checkbox" id="show-routes" checked>
+                    Show domestic routes
+                </label>
+
+
+                <label>
+                    <input type="checkbox" id="show-airports" checked>
+                    Show airports
+                </label>
+
+
+                <button id="reset-map" type="button">
+                    Reset Map
+                </button>
+            </div>
+
+
+            <div id="map"></div>
+
+
+            <div id="map-info" class="result-box">
+                Select an airport marker to view its details.
+            </div>
+
+
+            <p class="small-note">
+                Map displays airports with at least one domestic route.
+                Airport marker size reflects the number of direct connections.
+            </p>
+        </section>
+
+
+        <!-- PANEL B: AIRPORT LOOKUP -->
+        <section id="lookup-section" class="panel">
+            <div class="section-heading">
+                <span class="panel-letter">B</span>
+                <div>
+                    <h2>Airport Lookup</h2>
+                    <p>
+                        Find an airport using binary search and
+                        explore its neighbors and nearby airports.
+                    </p>
+                </div>
+            </div>
+
+
+            <div class="search-controls">
+                <label for="airport-search">
+                    Enter a three-letter airport code
+                </label>
+
+
+                <div class="input-row">
+                    <input
+                        type="text"
+                        id="airport-search"
+                        maxlength="3"
+                        placeholder="Example: TLH"
+                        autocomplete="off"
+                    >
+
+
+                    <button id="search-button" type="button">
+                        Search Airport
+                    </button>
+                </div>
+            </div>
+
+
+            <div id="lookup-result" class="result-box">
+                Try searching for TLH, ATL, or SEA.
+            </div>
+
+
+            <div class="two-column">
+                <div class="subpanel">
+                    <h3>Direct Flight Neighbors</h3>
+                    <div id="neighbor-list">
+                        Search for an airport to see its neighbors.
+                    </div>
+                </div>
+
+
+                <div class="subpanel">
+                    <h3>Five Nearest Active Airports</h3>
+                    <div id="nearest-list">
+                        Search for an airport to see nearby airports.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- PANEL C: NETWORK STATISTICS -->
+        <section id="stats-section" class="panel">
+            <div class="section-heading">
+                <span class="panel-letter">C</span>
+                <div>
+                    <h2>Network Statistics</h2>
+                    <p>
+                        Explore major hubs and disconnected
+                        groups in the U.S. flight network.
+                    </p>
+                </div>
+            </div>
+
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="total-airports">—</span>
+                    <span class="stat-label">U.S. Airports</span>
+                </div>
+
+
+                <div class="stat-card">
+                    <span class="stat-value" id="active-airports">—</span>
+                    <span class="stat-label">Active Airports</span>
+                </div>
+
+
+                <div class="stat-card">
+                    <span class="stat-value" id="total-routes">—</span>
+                    <span class="stat-label">Unique Routes</span>
+                </div>
+
+
+                <div class="stat-card">
+                    <span class="stat-value" id="total-components">—</span>
+                    <span class="stat-label">Connected Components</span>
+                </div>
+            </div>
+
+
+            <div class="two-column">
+                <div class="subpanel">
+                    <h3>Top 10 Airport Hubs</h3>
+                    <p class="small-note">
+                        Click a hub to locate it on the map.
+                    </p>
+                    <div id="hub-chart"></div>
+                </div>
+
+
+                <div class="subpanel">
+                    <h3>Connected Components</h3>
+                    <p class="small-note">
+                        Groups of airports that can reach
+                        one another through domestic routes.
+                    </p>
+                    <div id="component-list"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- PANEL D: CONNECTION FINDER -->
+        <section id="connections-section" class="panel">
+            <div class="section-heading">
+                <span class="panel-letter">D</span>
+                <div>
+                    <h2>Connection Finder</h2>
+                    <p>
+                        Use breadth-first search to find the
+                        fewest flights between two airports.
+                    </p>
+                </div>
+            </div>
+
+
+            <div class="connection-controls">
+                <div>
+                    <label for="origin-select">Departure Airport</label>
+                    <select id="origin-select"></select>
+                </div>
+
+
+                <div>
+                    <label for="destination-select">
+                        Destination Airport
+                    </label>
+                    <select id="destination-select"></select>
+                </div>
+
+
+                <button id="find-route" type="button">
+                    Find Connection
+                </button>
+            </div>
+
+
+            <div id="route-result" class="result-box">
+                Choose two airports to search for a route.
+            </div>
+
+
+            <div class="subpanel">
+                <h3>How the Search Works</h3>
+                <p>
+                    Breadth-first search visits airports one
+                    connection at a time. Because every flight
+                    counts as one step, the first route found
+                    uses the minimum number of flights.
+                </p>
+            </div>
+        </section>
+
+
+        <!-- PANEL E: ABOUT -->
+        <section id="about-section" class="panel">
+            <div class="section-heading">
+                <span class="panel-letter">E</span>
+                <div>
+                    <h2>About the Data and Algorithms</h2>
+                    <p>
+                        Understanding how this flight network
+                        was constructed and analyzed.
+                    </p>
+                </div>
+            </div>
+
+
+            <h3>Data Source</h3>
+            <p>
+                This project uses the OpenFlights airports.dat
+                and routes.dat datasets, representing a historical
+                snapshot of airline routes around 2014.
+                It is not a live airline schedule.
+            </p>
+
+
+            <h3>Network Construction</h3>
+            <p>
+                Airports are vertices and domestic routes are
+                undirected edges. Duplicate routes and
+                self-connections are removed. Only airports
+                in the United States with valid three-letter
+                IATA codes and coordinates are included.
+            </p>
+
+
+            <h3>Algorithms</h3>
+            <ul>
+                <li>
+                    <strong>Selection sort:</strong>
+                    Ranks airports by the number of connections.
+                </li>
+                <li>
+                    <strong>Haversine formula:</strong>
+                    Calculates great-circle distances
+                    between airports.
+                </li>
+                <li>
+                    <strong>Binary search:</strong>
+                    Finds airport codes efficiently
+                    in an alphabetically sorted list.
+                </li>
+                <li>
+                    <strong>Breadth-first search:</strong>
+                    Determines connectivity and minimum
+                    flight counts.
+                </li>
+                <li>
+                    <strong>Connected components:</strong>
+                    Identifies disconnected airport groups.
+                </li>
+            </ul>
+
+
+            <p class="small-note">
+                Created for FSU ISC4221C, Lab 07B.
+                AI assistance: OpenAI GPT-6.
+            </p>
+        </section>
+
+
+    </main>
+
+
+    <footer class="site-footer">
+        <p>
+            U.S. Flight Network Explorer · ISC4221C Lab 07B
+        </p>
+    </footer>
+
+
+    <!-- External interactive map library -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+    <!-- Our interactive website code -->
+    <script src="app.js"></script>
+
+
+</body>
+</html>
